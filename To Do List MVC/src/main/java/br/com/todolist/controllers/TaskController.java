@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.todolist.dao.TaskDao;
 import br.com.todolist.models.Task;
 import br.com.todolist.repositories.TaskRepository;
-import br.com.todolist.viewModels.MTask;
 
 @RestController
 @RequestMapping("todolist")
@@ -29,17 +29,31 @@ public class TaskController {
 	private TaskRepository repository;
 	
 	@GetMapping("/index")
-	public ResponseEntity<List<MTask>> index() {
+	public ResponseEntity<List<TaskDao>> index() {
 		try {
 			List<Task> toDoList = repository.findAll();
 			
-			List<MTask> response = new ArrayList<MTask>();
+			List<TaskDao> response = new ArrayList<TaskDao>();
 			
 			for(Task task : toDoList) {
-				response.add(new MTask(task.getId(), task.getName(), task.getDescription(), task.getDate()));
+				response.add(new TaskDao(task));
 			}
 			
 			return ResponseEntity.ok(response);
+		}
+		catch(Exception ex) {
+			throw ex;
+		}
+	}
+	
+	@GetMapping("/indexof/{id}")
+	public ResponseEntity<TaskDao> indexOf(@PathVariable(value="id") long id) {
+		try {
+			Task task = repository.findById(id);
+			
+			TaskDao taskDao = new TaskDao(task);
+			
+			return ResponseEntity.ok(taskDao);
 		}
 		catch(Exception ex) {
 			throw ex;
@@ -76,6 +90,22 @@ public class TaskController {
 			repository.deleteById(id);
 			
 			return ResponseEntity.ok("Sucessfully deleted");
+		}
+		catch(Exception ex) {
+			throw ex;
+		}
+	}
+	
+	@GetMapping("/complete/{id}/{value}")
+	public ResponseEntity<String> complete(@PathVariable(value="id") long id, @PathVariable(value="value") boolean value){
+		try {
+			Task task = repository.findById(id);
+			task.setComplete(value);
+			
+			repository.saveAndFlush(task);
+			
+			return ResponseEntity.ok("Sucessfully change of complete");
+			
 		}
 		catch(Exception ex) {
 			throw ex;
